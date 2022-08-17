@@ -17,124 +17,6 @@ pixelsPerMetric = 60
 def midpoint(ptA, ptB): # to use in below function
     return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
  
-############################################
-
-# %%
-def croi2(cnts, oorig): # contour region of interest
-	# loop over the contours individually
-	for c in cnts:
-		
-		orig = oorig.copy()
-		# if the contour is not sufficiently large, ignore it
-		# print("Area of contour ", cv2.contourArea(c))
-		if cv2.contourArea(c) < 100: # or cv2.contourArea(c) > 4000:
-			continue
-		
-		# compute the rotated bounding box of the contour
-		box = cv2.minAreaRect(c)
-		box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
-		box = np.array(box, dtype="int")
-	
-		# order the points in the contour such that they appear
-		# in top-left, top-right, bottom-right, and bottom-left
-		# order, then draw the outline of the rotated bounding box
-	
-		# box = perspective.order_points(box)
-		# cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
-	#or
-		box = perspective.order_points(box)
-		box = box.astype("int")+[x1,y1]
-		# asd
-		# cv2.drawContours(orig, [box.astype("int")+[x1,y1]], -1, (0, 255, 0), 2)
-	
-		# roic = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
-		roic = [
-			[x1,y1],
-			[x2,y1],
-			[x2,y2],
-			[x1,y2]
-			]
-		roic = np.array(roic, dtype="int")
-		print(roic)
-	
-		cv2.drawContours(orig, [roic.astype("int")], -1, (0, 255, 0), 2)
-		cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
-	
-	
-		# print(box.astype("int"))
-		# print(box.astype("int")+[x1, y1])
-	
-		# loop over the original points and draw them
-		for (x, y) in box:
-			cv2.circle(orig, (int(x), int(y)), 5, (0, 0, 255), -1)
-	
-		# unpack the ordered bounding box, then compute the midpoint
-		# between the top-left and top-right coordinates, followed by
-		# the midpoint between bottom-left and bottom-right coordinates
-		(tl, tr, br, bl) = box
-		(tltrX, tltrY) = midpoint(tl, tr)
-		(blbrX, blbrY) = midpoint(bl, br)
-		# compute the midpoint between the top-left and top-right points,
-		# followed by the midpoint between the top-righ and bottom-right
-		(tlblX, tlblY) = midpoint(tl, bl)
-		(trbrX, trbrY) = midpoint(tr, br)
-	
-		# draw the midpoints on the image
-		cv2.circle(orig, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
-		cv2.circle(orig, (int(blbrX), int(blbrY)), 5, (255, 0, 0), -1)
-		cv2.circle(orig, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
-		cv2.circle(orig, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
-	
-		# draw lines between the midpoints
-		cv2.line(orig, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),
-			(255, 0, 255), 2)
-		cv2.line(orig, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
-			(255, 0, 255), 2)
-	
-		# compute the Euclidean distance between the midpoints
-		dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
-		dB = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
-	
-		# if the pixels per metric has not been initialized, then
-		# compute it as the ratio of pixels to supplied metric
-		# (in this case, inches)
-		if pixelsPerMetric is None:
-			pixelsPerMetric = dB / 10 # args["width"]
-			print("pixelsPerMetric :",pixelsPerMetric)
-
-	
-		# compute the size of the object
-		dimA = dA / pixelsPerMetric
-		dimB = dB / pixelsPerMetric
-
-	
-		# draw the object sizes on the image
-		cv2.putText(orig, "{:.2f}in".format(dimA),
-			(int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
-			0.35, (0, 0, 255), 1)
-		cv2.putText(orig, "{:.2f}in".format(dimB),
-			(int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
-			0.35, (0, 0, 255), 1)
-	
-		# show the output image
-		# plt.imshow(imutils.opencv2matplotlib(orig))
-		cv2.imshow("Imager", orig)
-		print("Area of contour ", cv2.contourArea(c))
-	
-		cv2.waitKey(0)
-	cv2.destroyAllWindows()
-
-
-############################################
-
-
-
-
-
-
-
-
-
 
 # %%
 # # construct the argument parser and parse the arguments
@@ -297,11 +179,14 @@ cnts = imutils.grab_contours(cnts)
 
 # %%
 # %matplotlib widget
+orig = oorig.copy()
 tc = []
-# loop over the contours individually
-for c in cnts:
 
-	orig = oorig.copy()
+# loop over the contours individually
+nooftiles=0
+for c in cnts:
+	
+	# orig = oorig.copy()
 	
 	# roic = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
 	roic = [
@@ -358,6 +243,14 @@ for c in cnts:
 	print("br", br)
 	print("bl", bl)
 
+	print(nooftiles)
+	nooftiles+=1
+	
+	cv2.putText(orig, f"{nooftiles}",
+                (int(tl[0])+15, int(tl[1])), 
+				cv2.FONT_HERSHEY_SIMPLEX,
+                0.75, (0, 0, 255), 2)
+
 	cv2.imshow("Imager", orig)
 	print("Area of contour ", cv2.contourArea(c))
  
@@ -368,7 +261,9 @@ cv2.destroyAllWindows()
 # %%
 tc # tile contours with rectangle border
 # %%
+counter = 0
 
+# image_tile = oorig
 for t in tc:
 	# print(c)
 	image_tile = oorig
@@ -444,10 +339,11 @@ for t in tc:
 	# 'pixels per metric' calibration variable
 	(cnts, _) = contours.sort_contours(cnts)
 
-
+	orig = oorig.copy()
+	countertemp = 0
 	for c in cnts:
 		
-		orig = oorig.copy()
+		# orig = oorig.copy()
 		# if the contour is not sufficiently large, ignore it
 		# print("Area of contour ", cv2.contourArea(c))
 		if cv2.contourArea(c) < 100: # or cv2.contourArea(c) > 4000:
@@ -481,16 +377,17 @@ for t in tc:
 		# roic = np.array(roic, dtype="int")
 		# print(roic)
 	
-		cv2.drawContours(orig, [roic.astype("int")], -1, (0, 255, 0), 2)
-		cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
-	
+		cv2.drawContours(orig, [roic.astype("int")], -1, (255, 255, 0), 2)
+		# cv2.drawContours(orig, [box.astype("int")], -1, (255, 255, 0), 2)
+		countertemp += 1
+		print("countertemp", countertemp)
 	
 		# print(box.astype("int"))
 		# print(box.astype("int")+[x1, y1])
 	
 		# loop over the original points and draw them
 		for (x, y) in box:
-			cv2.circle(orig, (int(x), int(y)), 5, (0, 0, 255), -1)
+			cv2.circle(orig, (int(x), int(y)), 3, (0, 0, 255), -1)
 	
 		# unpack the ordered bounding box, then compute the midpoint
 		# between the top-left and top-right coordinates, followed by
@@ -502,18 +399,22 @@ for t in tc:
 		# followed by the midpoint between the top-righ and bottom-right
 		(tlblX, tlblY) = midpoint(tl, bl)
 		(trbrX, trbrY) = midpoint(tr, br)
+
+		cv2.line(orig, tl, bl, (0, 0, 255), 1) 
+		cv2.line(orig, tr, br, (0, 0, 255), 1) 
+
 	
-		# draw the midpoints on the image
-		cv2.circle(orig, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
-		cv2.circle(orig, (int(blbrX), int(blbrY)), 5, (255, 0, 0), -1)
-		cv2.circle(orig, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
-		cv2.circle(orig, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
+		# # draw the midpoints on the image
+		# cv2.circle(orig, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
+		# cv2.circle(orig, (int(blbrX), int(blbrY)), 5, (255, 0, 0), -1)
+		# cv2.circle(orig, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
+		# cv2.circle(orig, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
 	
-		# draw lines between the midpoints
-		cv2.line(orig, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),
-			(255, 0, 255), 2)
-		cv2.line(orig, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
-			(255, 0, 255), 2)
+		# # draw lines between the midpoints
+		# cv2.line(orig, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),
+		# 	(255, 0, 255), 2)
+		# cv2.line(orig, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
+		# 	(255, 0, 255), 2)
 	
 		# compute the Euclidean distance between the midpoints
 		dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
@@ -533,21 +434,24 @@ for t in tc:
 
 	
 		# draw the object sizes on the image
-		cv2.putText(orig, "{:.2f}in".format(dimA),
-			(int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
+		cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10),
+			(int(tl[0])-15, int(tl[1])-15), cv2.FONT_HERSHEY_SIMPLEX,
 			0.35, (0, 0, 255), 1)
-		cv2.putText(orig, "{:.2f}in".format(dimB),
-			(int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
+		cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10),
+			(int(tr[0])-15, int(tr[1])-15), cv2.FONT_HERSHEY_SIMPLEX,
 			0.35, (0, 0, 255), 1)
+		# cv2.putText(orig, "{:.2f}in".format(dimB),
+		# 	(int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
+		# 	0.35, (0, 0, 255), 1)
 	
 		# show the output image
 		# plt.imshow(imutils.opencv2matplotlib(orig))
 		cv2.imshow("Imager", orig)
 		print("Area of contour ", cv2.contourArea(c))
-	
+		counter += 1
+		print(counter)
 		cv2.waitKey(0)
+
+
 	cv2.destroyAllWindows()
-
-
-# cv2.destroyAllWindows()
 # %%
