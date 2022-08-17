@@ -13,6 +13,7 @@ from imutils import contours
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 
+
 ap.add_argument("-i", "--image", type=str, default="IMG_1097.JPG",
 	help="path to input image")
 ap.add_argument("-w", "--width", type=float, default=10.0,
@@ -77,6 +78,9 @@ roi = image[y1:y2, x1:x2]
 
 image = roi.copy()
 
+
+
+
 # %%
 
 # convert the image to grayscale
@@ -104,6 +108,17 @@ edged = cv2.Canny(blurred, 50, 150)
 cv2.imshow("Edged", edged)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+
+# %%
+# %%
+
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+edgeMap = imutils.auto_canny(gray)
+cv2.imshow("Original", image)
+cv2.imshow("Automatic Edge Map", edgeMap)
+
+
 
 
 # %%
@@ -171,7 +186,7 @@ for c in cnts:
     
 	# if the contour is not sufficiently large, ignore it
 	# print("Area of contour ", cv2.contourArea(c))
-	if cv2.contourArea(c) < 100:
+	if cv2.contourArea(c) < 100 or cv2.contourArea(c) > 4000:
 		continue
 	
 	# compute the rotated bounding box of the contour

@@ -10,6 +10,7 @@ import imutils
 from imutils import perspective
 from imutils import contours
 
+# arrangements for heroku
 UPLOAD_FOLDER ='static/uploads/'
 DOWNLOAD_FOLDER = 'static/downloads/'
 ALLOWED_EXTENSIONS = {'jpg', 'png','jpeg', 'JPG', 'PNG'}
@@ -71,28 +72,7 @@ def detect_object(path, filename):    # TODO:
     # (h, w) = image.shape[:2]
     image = imutils.resize(image, height = 500) # resize
     oorig = image.copy()
-    
 
-    # blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 0.007843, (300, 300), 127.5)
-    # net.setInput(blob)
-    # detections = net.forward()
-    # for i in range(0, detections.shape[2]):
-    #     confidence = detections[0, 0, i, 2]
-    #     if confidence > 0.60:
-    #         idx = int(detections[0, 0, i, 1])
-    #         box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-    #         (startX, startY, endX, endY) = box.astype("int")
-
-    #         # display the prediction
-    #         label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-    #         # print("[INFO] {}".format(label))
-    #         cv2.rectangle(image, (startX, startY), (endX, endY),
-    #             COLORS[idx], 2)
-    #         y = startY - 15 if startY - 15 > 15 else startY + 15
-    #         cv2.putText(image, label, (startX, y),
-    #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
-
-    # cv2.imwrite(f"{DOWNLOAD_FOLDER}{filename}",image)
     
 ################################
 ##
@@ -136,6 +116,7 @@ def detect_object(path, filename):    # TODO:
     
     orig = oorig.copy()
     for c in cnts:
+        
         
         if cv2.contourArea(c) < 100:
             continue
