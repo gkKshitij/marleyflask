@@ -35,35 +35,37 @@ def midpoint(ptA, ptB): # to use in below function
 
 # load the input image
 # image = cv2.imread(args["image"]) 
-image = cv2.imread("IMG_1097.JPG")
+image = cv2.imread("frame126.jpg")
 
-image = imutils.resize(image, height = 500) # resize
+# image = imutils.resize(image, height = 500) # resize
 oorig = image.copy()
 plt.imshow(imutils.opencv2matplotlib(image))
 # cv2.waitKey(0)
 
 # %%
-# # Select ROI dynamically in real time
+# Select ROI dynamically in real time
 
-# r = cv2.selectROI(image)
-# cv2.waitKey(0)
+r = cv2.selectROI(image)
+cv2.waitKey(0)
 
-# # Crop image
-# roi = image[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
-# a = int(r[1])
-# b = int(r[1]+r[3])
-# c = int(r[0])
-# d = int(r[0]+r[2])
-# print(f"{a}:{b}, {c}:{d}")
-# cv2.imshow("Cropped ROI", roi)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+# Crop image
+roi = image[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
+a = int(r[1])
+b = int(r[1]+r[3])
+c = int(r[0])
+d = int(r[0]+r[2])
+print(f"{a}:{b}, {c}:{d}")
+cv2.waitKey(0)
+cv2.imshow("Cropped ROI", roi)
+cv2.destroyAllWindows()
 
 
-# y1=a
-# y2=b
-# x1=c
-# x2=d
+y1=a
+y2=b
+x1=c
+x2=d
+# %%
+cv2.destroyAllWindows()
 
 # %%
 # #####################
@@ -116,6 +118,7 @@ plt.imshow(imutils.opencv2matplotlib(blurred))
 # edged = cv2.Canny(gray, 200, 255) 
 # edged = cv2.Canny(blurred, 100, 200) # blurred
 edged = cv2.Canny(blurred, 50, 100) # blurred
+eroi = edged.copy()
 plt.imshow(imutils.opencv2matplotlib(edged))
 
 
@@ -181,6 +184,8 @@ cnts = imutils.grab_contours(cnts)
 # %matplotlib widget
 orig = oorig.copy()
 tc = []
+tca = []
+abcde = []
 
 # loop over the contours individually
 nooftiles=0
@@ -202,6 +207,57 @@ for c in cnts:
 	# print("Area of contour ", cv2.contourArea(c))
 	if cv2.contourArea(c) < 3000 or cv2.contourArea(c) > 5000:
 		continue
+
+	tca.append(c)
+
+
+	# output = roi.copy()
+	# cv2.drawContours(output, [c], -1, (0, 255, 0), 3)
+	# (x, y, w, h) = cv2.boundingRect(c)
+	# text = "original, num_pts={}".format(len(c))
+	# cv2.putText(output, 
+	# text, 
+	# (x, y - 15), 
+	# cv2.FONT_HERSHEY_SIMPLEX,
+	# 0.4, 
+	# (0, 255, 0), 
+	# 2)
+
+	# show the original contour image
+	# print("[INFO] {}".format(text))
+	# cv2.imshow("Original Contour", output)
+	# cv2.waitKey(0)
+
+	# to demonstrate the impact of contour approximation, let's loop
+	# over a number of epsilon sizes
+	# for eps in np.linspace(0.001, 0.05, 10):
+		# approximate the contour
+	eps=0.0228
+	peri = cv2.arcLength(c, True)
+	approx = cv2.approxPolyDP(c, eps * peri, True)
+	abcde.append(approx)
+
+	# # draw the approximated contour on the image
+	# output = image.copy()
+	# cv2.drawContours(output, [approx], -1, (0, 255, 0), 3)
+	# text = "eps={:.4f}, num_pts={}".format(eps, len(approx))
+	# cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+	# 	0.4, (0, 255, 0), 2)
+	# show the approximated contour image
+	# print("[INFO] {}".format(text))
+	# cv2.imshow("Approximated Contour", output)
+	# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+
+
+
+
+
+
+
+
+
 
 
 	# compute the rotated bounding box of the contour
@@ -237,13 +293,13 @@ for c in cnts:
 	# between the top-left and top-right coordinates, followed by
 	# the midpoint between bottom-left and bottom-right coordinates
 	(tl, tr, br, bl) = box
-	# print(box)
-	print("tl", tl)
-	print("tr", tr)
-	print("br", br)
-	print("bl", bl)
+	# # print(box)
+	# print("tl", tl)
+	# print("tr", tr)
+	# print("br", br)
+	# print("bl", bl)
 
-	print(nooftiles)
+	# print(nooftiles)
 	nooftiles+=1
 	
 	cv2.putText(orig, f"{nooftiles}",
@@ -252,10 +308,12 @@ for c in cnts:
                 0.75, (0, 0, 255), 2)
 
 	cv2.imshow("Imager", orig)
-	print("Area of contour ", cv2.contourArea(c))
+	# print("Area of contour ", cv2.contourArea(c))
  
 	tc.append(box)
 	cv2.waitKey(0)
+
+tcai = orig.copy()
 cv2.destroyAllWindows()
 
 # %%
@@ -353,7 +411,7 @@ for t in tc:
 		box = cv2.minAreaRect(c)
 		box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
 		box = np.array(box, dtype="int")
-		print(box)
+		# print(box)
 	
 		# order the points in the contour such that they appear
 		# in top-left, top-right, bottom-right, and bottom-left
@@ -380,7 +438,7 @@ for t in tc:
 		cv2.drawContours(orig, [roic.astype("int")], -1, (255, 255, 0), 2)
 		# cv2.drawContours(orig, [box.astype("int")], -1, (255, 255, 0), 2)
 		countertemp += 1
-		print("countertemp", countertemp)
+		# print("countertemp", countertemp)
 	
 		# print(box.astype("int"))
 		# print(box.astype("int")+[x1, y1])
@@ -401,7 +459,12 @@ for t in tc:
 		(trbrX, trbrY) = midpoint(tr, br)
 
 		cv2.line(orig, tl, bl, (0, 0, 255), 1) 
-		cv2.line(orig, tr, br, (0, 0, 255), 1) 
+		cv2.line(orig, tr, br, (0, 0, 255), 1)
+
+		# for approxa in abcde:
+		# 	for popints in range(len(approxa//2)):
+		# 		print(approxa[popints], approxa[-popints])
+		# 		cv2.line(orig, approxa[popints], approxa[-popints], (255, 0, 0), 1)
 
 	
 		# # draw the midpoints on the image
@@ -425,7 +488,7 @@ for t in tc:
 		# (in this case, inches)
 		if pixelsPerMetric is None:
 			pixelsPerMetric = dB / 10 # args["width"]
-			print("pixelsPerMetric :",pixelsPerMetric)
+			# print("pixelsPerMetric :",pixelsPerMetric)
 
 	
 		# compute the size of the object
@@ -447,11 +510,114 @@ for t in tc:
 		# show the output image
 		# plt.imshow(imutils.opencv2matplotlib(orig))
 		cv2.imshow("Imager", orig)
-		print("Area of contour ", cv2.contourArea(c))
+		# print("Area of contour ", cv2.contourArea(c))
 		counter += 1
-		print(counter)
+		# print(counter)
 		cv2.waitKey(0)
 
+# mod abcde
+	orig = oorig.copy()
 
+	rabcde = abcde
+	for approxa in abcde:
+		for ppopints in range(1,len(approxa),2):
+			approxa[-ppopints][0][0]=approxa[ppopints][0][0]
+
+
+# abcde
+	approxac=0
+	for approxa in abcde:
+		for popints in range(1,len(approxa)//2):
+			# print(approxa[popints], approxa[-popints])
+			# print(popints)
+			# print("len(approxa//2:",len(approxa)//2)
+			# dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
+			dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
+			dimA = dA / pixelsPerMetric
+
+			cv2.line(orig, approxa[popints][0]+[x1,y1], approxa[-popints][0]+[x1,y1], (0, 255, 0), 1)
+			cv2.circle(orig, approxa[popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+			cv2.circle(orig, approxa[-popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+			# if popints!=1:
+				# continue
+			cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10+4),
+						# (int(tl[0])-15, int(tl[1])-15), 
+						approxa[popints][0]+[x1,y1], 
+						cv2.FONT_HERSHEY_SIMPLEX,
+						0.35, (0, 255, 0), 1)
+		approxac+=1
+
+	cv2.imshow("Imager", orig)
+	cv2.waitKey(0)
+	
 	cv2.destroyAllWindows()
+
+
+	# %%
+	cv2.destroyAllWindows()
+
+
+
+
+###############################################################
+# working on better contours
+# plan to get local minimas and maximas
+
+# %%
+# # for viewing all contours / debugging
+# image2=roi
+# contours, hierarchy= cv2.findContours(eroi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+# cv2.drawContours(image2, contours, -1, (0,255,0),1)
+# plt.imshow(imutils.opencv2matplotlib(image2))
+
+
+
+# %%
+# # for viewing all contours / debugging
+image2=roi.copy()
+contours, hierarchy= cv2.findContours(eroi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+cv2.drawContours(image2, contours, -1, (0,255,0),1)
+plt.imshow(imutils.opencv2matplotlib(image2))
+
+# %%
+# plt.imshow(imutils.opencv2matplotlib(tcai))
+
+
+# %%
+# debug cell
+# draw the shape of the contour on the output image, compute the
+# bounding box, and display the number of points in the contour
+for c in tca:
+	output = roi.copy()
+	cv2.drawContours(output, [c], -1, (0, 255, 0), 3)
+	(x, y, w, h) = cv2.boundingRect(c)
+	text = "original, num_pts={}".format(len(c))
+	cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+		0.4, (0, 255, 0), 2)
+
+	# show the original contour image
+	print("[INFO] {}".format(text))
+	cv2.imshow("Original Contour", output)
+	cv2.waitKey(0)
+
+	# to demonstrate the impact of contour approximation, let's loop
+	# over a number of epsilon sizes
+	for eps in np.linspace(0.001, 0.05, 10):
+		# approximate the contour
+		peri = cv2.arcLength(c, True)
+		approx = cv2.approxPolyDP(c, eps * peri, True)
+		# draw the approximated contour on the image
+		output = image.copy()
+		cv2.drawContours(output, [approx], -1, (0, 255, 0), 3)
+		text = "eps={:.4f}, num_pts={}".format(eps, len(approx))
+		cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+			0.4, (0, 255, 0), 2)
+		# show the approximated contour image
+		# print("[INFO] {}".format(text))
+		cv2.imshow("Approximated Contour", output)
+		cv2.waitKey(0)
+	cv2.destroyAllWindows()
+# %%
+
+
 # %%
