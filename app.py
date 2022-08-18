@@ -10,6 +10,7 @@ from scipy.spatial import distance as dist
 import imutils
 from imutils import perspective
 from imutils import contours
+import re
 
 # arrangements for heroku
 UPLOAD_FOLDER ='static/uploads/'
@@ -255,6 +256,7 @@ def detect_object(path, filename):    # TODO:
         # 'pixels per metric' calibration variable
         (cnts, _) = contours.sort_contours(cnts)
 
+        orig2 = oorig.copy()
         for c in cnts:
             orig = oorig.copy()
             
@@ -292,6 +294,7 @@ def detect_object(path, filename):    # TODO:
             # print(roic)
         
             cv2.drawContours(orig, [roic.astype("int")], -1, (255, 255, 0), 2)
+            cv2.drawContours(orig2, [roic.astype("int")], -1, (255, 255, 0), 2)
             # cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
         
         
@@ -301,6 +304,7 @@ def detect_object(path, filename):    # TODO:
             # loop over the original points and draw them
             for (x, y) in box:
                 cv2.circle(orig, (int(x), int(y)), 3, (0, 0, 255), -1)
+                cv2.circle(orig2, (int(x), int(y)), 3, (0, 0, 255), -1)
         
             # unpack the ordered bounding box, then compute the midpoint
             # between the top-left and top-right coordinates, followed by
@@ -315,6 +319,9 @@ def detect_object(path, filename):    # TODO:
 
             cv2.line(orig, tl, bl, (0, 0, 255), 1) 
             cv2.line(orig, tr, br, (0, 0, 255), 1) 
+
+            cv2.line(orig2, tl, bl, (0, 0, 255), 1) 
+            cv2.line(orig2, tr, br, (0, 0, 255), 1) 
         
             # # draw the midpoints on the image
             # cv2.circle(orig, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
@@ -349,10 +356,16 @@ def detect_object(path, filename):    # TODO:
             # draw the object sizes on the image
             cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10),
                 (int(tl[0])-15, int(tl[1])-15), cv2.FONT_HERSHEY_SIMPLEX,
-                0.75, (0, 0, 255), 2)
+                0.55, (0, 0, 255), 2)
             cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10),
                 (int(tr[0])-15, int(tr[1])-15), cv2.FONT_HERSHEY_SIMPLEX,
-                0.75, (0, 0, 255), 2)
+                0.55, (0, 0, 255), 2)
+            cv2.putText(orig2, "{:.2f}mm".format((dimA*2.54)*10),
+                (int(tl[0])-15, int(tl[1])-15), cv2.FONT_HERSHEY_SIMPLEX,
+                0.55, (0, 0, 255), 2)
+            cv2.putText(orig2, "{:.2f}mm".format((dimA*2.54)*10),
+                (int(tr[0])-15, int(tr[1])-15), cv2.FONT_HERSHEY_SIMPLEX,
+                0.55, (0, 0, 255), 2)
                 
             # cv2.putText(orig, "{:.2f}in".format(dimA),
             #     (int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
@@ -369,6 +382,7 @@ def detect_object(path, filename):    # TODO:
             # print(counter)
             # cv2.waitKey(0)
             cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/c{counter}_{filename}",orig)
+            cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/caio_{filename}",orig2)
             contournp = (f"{DOWNLOAD_FOLDER}processed/c{counter}_{filename}")
             print(contournp)
             filelist.append(contournp)
@@ -393,6 +407,12 @@ def index():
 
             # filelist = filelist
             imageList = os.listdir('static/downloads/processed')
+            for val in imageList:
+                # if 'caio' in val:
+                if re.search('aio', val):
+                    # imageList.remove(imageList.index(val))
+                    imageList.remove(val)
+                    
             # imagelist = ['processed/' + image for image in imageList]
             imagelist = imageList
 
@@ -408,6 +428,7 @@ def index():
                 "thresh_img":'static/downloads/thresh_'+filename,
                 "mask_img":'static/downloads/mask_'+filename,
                 "tilesdetected":'static/downloads/tilesdetected_'+filename,
+                "caio":'static/downloads/processed/caio_'+filename,
                 # "processed_img_c{i}":'static/downloads/processed_'+'c{i}_'+filename,
                 # "processed_img_c{i}":'static/downloads/processed_'+'c{i}_'+filename,
                 "{i}":'static/downloads/processed_'+'c{i}_'+filename,
