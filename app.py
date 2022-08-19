@@ -411,7 +411,7 @@ def index():
                 # if 'caio' in val:
                 if re.search('aio', val):
                     # imageList.remove(imageList.index(val))
-                    imageList.remove(val)
+                    imageList.remove    (val)
                     
             # imagelist = ['processed/' + image for image in imageList]
             imagelist = imageList
