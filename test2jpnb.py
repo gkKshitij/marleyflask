@@ -35,19 +35,20 @@ def midpoint(ptA, ptB): # to use in below function
 
 # load the input image
 # image = cv2.imread(args["image"]) 
-image = cv2.imread("IMG_1097.JPG")
+# image = cv2.imread("frame126.jpg")
 
-# image = imutils.resize(image, height = 500) # resize
+image = cv2.imread("IMG_1097.JPG")
+image = imutils.resize(image, height = 500) # resize
 oorig = image.copy()
 plt.imshow(imutils.opencv2matplotlib(image))
 # cv2.waitKey(0)
 
 # %%
-# # Select ROI dynamically in real time
+# Select ROI dynamically in real time
 
 # r = cv2.selectROI(image)
 # cv2.waitKey(0)
-# # # %%
+
 # # Crop image
 # roi = image[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
 # a = int(r[1])
@@ -56,7 +57,6 @@ plt.imshow(imutils.opencv2matplotlib(image))
 # d = int(r[0]+r[2])
 # print(f"{a}:{b}, {c}:{d}")
 # cv2.waitKey(0)
-
 # cv2.imshow("Cropped ROI", roi)
 # cv2.destroyAllWindows()
 
@@ -71,10 +71,10 @@ plt.imshow(imutils.opencv2matplotlib(image))
 # %%
 # #####################
 
-# y1=263 #a
-# y2=433 #b
-# x1=214 #c
-# x2=491 #d
+y1=263 #a
+y2=433 #b
+x1=214 #c
+x2=491 #d
 
 #######################
 
@@ -82,9 +82,6 @@ plt.imshow(imutils.opencv2matplotlib(image))
 roi = image[y1:y2, x1:x2]
 # roi = image[207:479, 214:494]
 # roi = image[263:433, 214:491]
-# roi = image[263:433, 214:491]
-# roi = image[1:275, 36:294] # tiles roi in vidframe
-# roi = image[52:117, 45:285] # best tile in vid frame
 roic = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
 
 
@@ -107,41 +104,41 @@ plt.imshow(imutils.opencv2matplotlib(gray))
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
-# %%
+# # %%
 
 # apply a Gaussian blur with a 7x7 kernel to the image to smooth it,
 # reducing high frequency noise
-blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+blurred = cv2.GaussianBlur(gray, (11, 11), 0)
 plt.imshow(imutils.opencv2matplotlib(blurred))
 
 
 
-# %%
+# # %%
 
-# # applying edge detection
+# applying edge detection
 # edged = cv2.Canny(gray, 200, 255) 
-# # edged = cv2.Canny(blurred, 100, 200) # blurred
-# # edged = cv2.Canny(blurred, 50, 100) # blurred
-# eroi = edged.copy()
-# plt.imshow(imutils.opencv2matplotlib(edged))
+# edged = cv2.Canny(blurred, 100, 200) # blurred
+edged = cv2.Canny(blurred, 50, 100) # blurred
+eroi = edged.copy()
+plt.imshow(imutils.opencv2matplotlib(edged))
 
 
-# %%
-# Autocanny 
-# gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
-edgeMap = imutils.auto_canny(blurred)
-# cv2.imshow("Original", image)
-plt.imshow(imutils.opencv2matplotlib(edgeMap))
+# # %%
+# # Autocanny 
+# # gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+# edgeMap = imutils.auto_canny(blurred)
+# # cv2.imshow("Original", image)
+# plt.imshow(imutils.opencv2matplotlib(edgeMap))
 
 
-# %%
+# # %%
 
-dilated = cv2.dilate(edgeMap, None, iterations=2) # 10 is an interesting number
+dilated = cv2.dilate(edged, None, iterations=2) # 10 is an interesting number
 eroded = cv2.erode(dilated, None, iterations=2)
 plt.imshow(imutils.opencv2matplotlib(eroded))
 
 
-# %%
+# # %%
 
 # threshold the image by setting all pixel values less than 225 to 255 
 # (white; foreground) and all pixel values >= 225 to 255
@@ -150,7 +147,7 @@ plt.imshow(imutils.opencv2matplotlib(eroded))
 thresh = cv2.threshold(eroded, 225, 255, cv2.THRESH_BINARY_INV)[1]
 plt.imshow(imutils.opencv2matplotlib(thresh))
 
-# %%
+# # %%
 # we apply erosions to reduce the size of foreground objects
 # further erosion to lose some unwanted small spaces
 mask = thresh.copy()
@@ -158,13 +155,13 @@ mask = cv2.erode(mask, None, iterations=1)
 plt.imshow(imutils.opencv2matplotlib(mask))
 
 
-# %%
+# # %%
 
-# for viewing all contours / debugging
-image2=image
-contours, hierarchy= cv2.findContours(blurred, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-cv2.drawContours(image2, contours, -1, (0,255,0),1)
-plt.imshow(imutils.opencv2matplotlib(image2))
+# # for viewing all contours / debugging
+# image2=image
+# contours, hierarchy= cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+# cv2.drawContours(image2, contours, -1, (0,255,0),1)
+# plt.imshow(imutils.opencv2matplotlib(image2))
 
 	# return mask
 
@@ -577,11 +574,11 @@ for t in tc:
 
 
 # %%
-# # # for viewing all contours / debugging
-# image2=roi.copy()
-# contours, hierarchy= cv2.findContours(eroi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-# cv2.drawContours(image2, contours, -1, (0,255,0),1)
-# plt.imshow(imutils.opencv2matplotlib(image2))
+# # for viewing all contours / debugging
+image2=roi.copy()
+contours, hierarchy= cv2.findContours(eroi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+cv2.drawContours(image2, contours, -1, (0,255,0),1)
+plt.imshow(imutils.opencv2matplotlib(image2))
 
 
 # %%
@@ -589,39 +586,39 @@ for t in tc:
 
 
 # %%
-# # debug cell
-# # draw the shape of the contour on the output image, compute the
-# # bounding box, and display the number of points in the contour
-# for c in tca:
-# 	output = roi.copy()
-# 	cv2.drawContours(output, [c], -1, (0, 255, 0), 3)
-# 	(x, y, w, h) = cv2.boundingRect(c)
-# 	text = "original, num_pts={}".format(len(c))
-# 	cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
-# 		0.4, (0, 255, 0), 2)
+# debug cell / contour approximation
+# draw the shape of the contour on the output image, compute the
+# bounding box, and display the number of points in the contour
+for c in tca:
+	output = roi.copy()
+	cv2.drawContours(output, [c], -1, (0, 255, 0), 3)
+	(x, y, w, h) = cv2.boundingRect(c)
+	text = "original, num_pts={}".format(len(c))
+	cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+		0.4, (0, 255, 0), 2)
 
-# 	# show the original contour image
-# 	print("[INFO] {}".format(text))
-# 	cv2.imshow("Original Contour", output)
-# 	cv2.waitKey(0)
+	# show the original contour image
+	# print("[INFO] {}".format(text))
+	cv2.imshow("Original Contour", output)
+	cv2.waitKey(0)
 
-# 	# to demonstrate the impact of contour approximation, let's loop
-# 	# over a number of epsilon sizes
-# 	for eps in np.linspace(0.001, 0.05, 10):
-# 		# approximate the contour
-# 		peri = cv2.arcLength(c, True)
-# 		approx = cv2.approxPolyDP(c, eps * peri, True)
-# 		# draw the approximated contour on the image
-# 		output = image.copy()
-# 		cv2.drawContours(output, [approx], -1, (0, 255, 0), 3)
-# 		text = "eps={:.4f}, num_pts={}".format(eps, len(approx))
-# 		cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
-# 			0.4, (0, 255, 0), 2)
-# 		# show the approximated contour image
-# 		# print("[INFO] {}".format(text))
-# 		cv2.imshow("Approximated Contour", output)
-# 		cv2.waitKey(0)
-# 	cv2.destroyAllWindows()
+	# to demonstrate the impact of contour approximation, let's loop
+	# over a number of epsilon sizes
+	for eps in np.linspace(0.001, 0.05, 10):
+		# approximate the contour
+		peri = cv2.arcLength(c, True)
+		approx = cv2.approxPolyDP(c, eps * peri, True)
+		# draw the approximated contour on the image
+		output = image.copy()
+		cv2.drawContours(output, [approx], -1, (0, 255, 0), 3)
+		text = "eps={:.4f}, num_pts={}".format(eps, len(approx))
+		cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+			0.4, (0, 255, 0), 2)
+		# show the approximated contour image
+		# print("[INFO] {}".format(text))
+		cv2.imshow("Approximated Contour", output)
+		cv2.waitKey(0)
+	cv2.destroyAllWindows()
 # %%
 
 
