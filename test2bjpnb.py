@@ -2,6 +2,7 @@
 #imports
 # from skimage.filters import threshold_local
 # import argparse
+# from sys import tracebacklimit
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -10,12 +11,9 @@ import imutils
 from imutils import perspective
 from imutils import contours
 
-from skimage.feature import peak_local_max
-from skimage.morphology import watershed
-from scipy import ndimage
-
 # %%
 pixelsPerMetric = 60
+# %%
 
 def midpoint(ptA, ptB): # to use in below function
     return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
@@ -39,16 +37,14 @@ def midpoint(ptA, ptB): # to use in below function
 # load the input image
 # image = cv2.imread(args["image"]) 
 # image = cv2.imread("frame126.jpg")
-image = cv2.imread("edited/frame157_edited.jpg")
 
-# image = cv2.imread("IMG_1097.JPG")
-# image = imutils.resize(image, height = 500) # resize
-
+image = cv2.imread("IMG_1097.JPG")
+image = imutils.resize(image, height = 500) # resize
 oorig = image.copy()
 plt.imshow(imutils.opencv2matplotlib(image))
 # cv2.waitKey(0)
 
-# # %%
+# %%
 # Select ROI dynamically in real time
 
 # r = cv2.selectROI(image)
@@ -73,30 +69,24 @@ plt.imshow(imutils.opencv2matplotlib(image))
 # # %%
 # cv2.destroyAllWindows()
 
-# # %%
+# %%
 # #####################
 
-# y1=263 #a
-# y2=433 #b
-# x1=214 #c
-# x2=491 #d
-
-y1=62 #a
-y2=117 #b
-x1=45 #c
-x2=285 #d
-
+y1=263 #a
+y2=433 #b
+x1=214 #c
+x2=491 #d
 
 #######################
 
-# # %%
+# %%
 roi = image[y1:y2, x1:x2]
 # roi = image[207:479, 214:494]
 # roi = image[263:433, 214:491]
 roic = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
 
 
-# # %%
+# %%
 %matplotlib inline
 
 image = roi.copy()
@@ -119,7 +109,7 @@ plt.imshow(imutils.opencv2matplotlib(gray))
 
 # apply a Gaussian blur with a 7x7 kernel to the image to smooth it,
 # reducing high frequency noise
-blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+blurred = cv2.GaussianBlur(gray, (11, 11), 0)
 plt.imshow(imutils.opencv2matplotlib(blurred))
 
 
@@ -128,28 +118,28 @@ plt.imshow(imutils.opencv2matplotlib(blurred))
 
 # applying edge detection
 # edged = cv2.Canny(gray, 200, 255) 
-# edged = cv2.Canny(gray, 100, 200) # gray
-edged = cv2.Canny(blurred, 30, 80) # gray
+# edged = cv2.Canny(blurred, 100, 200) # blurred
+edged = cv2.Canny(blurred, 50, 100) # blurred
 eroi = edged.copy()
 plt.imshow(imutils.opencv2matplotlib(edged))
 
 
-# # %%
+# %%
 # # Autocanny 
 # # gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
-# edgeMap = imutils.auto_canny(gray)
+# edgeMap = imutils.auto_canny(blurred)
 # # cv2.imshow("Original", image)
 # plt.imshow(imutils.opencv2matplotlib(edgeMap))
 
 
 # %%
 
-dilated = cv2.dilate(edged, None, iterations=3)
-eroded = cv2.erode(dilated, None, iterations=3)
+dilated = cv2.dilate(edged, None, iterations=2) # 10 is an interesting number
+eroded = cv2.erode(dilated, None, iterations=2)
 plt.imshow(imutils.opencv2matplotlib(eroded))
 
 
-# %%
+# # %%
 
 # threshold the image by setting all pixel values less than 225 to 255 
 # (white; foreground) and all pixel values >= 225 to 255
@@ -162,11 +152,11 @@ plt.imshow(imutils.opencv2matplotlib(thresh))
 # we apply erosions to reduce the size of foreground objects
 # further erosion to lose some unwanted small spaces
 mask = thresh.copy()
-mask = cv2.erode(mask, None, iterations=1)
+# mask = cv2.erode(mask, None, iterations=1)
 plt.imshow(imutils.opencv2matplotlib(mask))
 
 
-# # %%
+# %%
 
 # # for viewing all contours / debugging
 # image2=image
@@ -185,9 +175,10 @@ plt.imshow(imutils.opencv2matplotlib(mask))
 cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 cnts = imutils.grab_contours(cnts)
 
+# %%
 # sort the contours from left-to-right and initialize the
 # 'pixels per metric' calibration variable
-(cnts, _) = contours.sort_contours(cnts)
+(cnts, _) = contours.sort_contours(cnts) # very glitchy
 
 # TODO: needs to be fine tuned
 # pixelsPerMetric = 60 # hard coded value
@@ -324,7 +315,7 @@ for c in cnts:
  
 	tc.append(box)
 	cv2.waitKey(0)
-
+# %%
 tcai = orig.copy()
 cv2.destroyAllWindows()
 
@@ -416,7 +407,6 @@ for t in tc:
 		# orig = oorig.copy()
 		# if the contour is not sufficiently large, ignore it
 		# print("Area of contour ", cv2.contourArea(c))
-		print(cv2.contourArea(c))
 		if cv2.contourArea(c) < 100: # or cv2.contourArea(c) > 4000:
 			continue
 		
@@ -559,8 +549,10 @@ for t in tc:
 						cv2.FONT_HERSHEY_SIMPLEX,
 						0.35, (0, 255, 0), 1)
 		approxac+=1
+	
 
 	cv2.imshow("Imager", orig)
+	t2b=orig
 	cv2.waitKey(0)
 	
 	cv2.destroyAllWindows()
@@ -585,116 +577,145 @@ for t in tc:
 
 
 
+# # %%
+# # # for viewing all contours / debugging
+# image2=roi.copy()
+# contours, hierarchy= cv2.findContours(eroi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+# cv2.drawContours(image2, contours, -1, (0,255,0),1)
+# plt.imshow(imutils.opencv2matplotlib(image2))
+
+
+# # %%
+# # plt.imshow(imutils.opencv2matplotlib(tcai))
+
+
+# # %%
+# # debug cell / contour approximation
+# # draw the shape of the contour on the output image, compute the
+# # bounding box, and display the number of points in the contour
+# for c in tca:
+# 	output = roi.copy()
+# 	cv2.drawContours(output, [c], -1, (0, 255, 0), 3)
+# 	(x, y, w, h) = cv2.boundingRect(c)
+# 	text = "original, num_pts={}".format(len(c))
+# 	cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+# 		0.4, (0, 255, 0), 2)
+
+# 	# show the original contour image
+# 	# print("[INFO] {}".format(text))
+# 	cv2.imshow("Original Contour", output)
+# 	cv2.waitKey(0)
+
+# 	# to demonstrate the impact of contour approximation, let's loop
+# 	# over a number of epsilon sizes
+# 	for eps in np.linspace(0.001, 0.05, 10):
+# 		# approximate the contour
+# 		peri = cv2.arcLength(c, True)
+# 		approx = cv2.approxPolyDP(c, eps * peri, True)
+# 		# draw the approximated contour on the image
+# 		output = image.copy()
+# 		cv2.drawContours(output, [approx], -1, (0, 255, 0), 3)
+# 		text = "eps={:.4f}, num_pts={}".format(eps, len(approx))
+# 		cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+# 			0.4, (0, 255, 0), 2)
+# 		# show the approximated contour image
+# 		# print("[INFO] {}".format(text))
+# 		cv2.imshow("Approximated Contour", output)
+# 		cv2.waitKey(0)
+# 	cv2.destroyAllWindows()
 # %%
-# # for viewing all contours / debugging
-image2=roi.copy()
-contours, hierarchy= cv2.findContours(eroi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-cv2.drawContours(image2, contours, -1, (0,255,0),1)
-plt.imshow(imutils.opencv2matplotlib(image2))
-
-# %%
-# plt.imshow(imutils.opencv2matplotlib(tcai))
 
 
 # %%
-# debug cell / contour approximation
-# draw the shape of the contour on the output image, compute the
-# bounding box, and display the number of points in the contour
-for c in tca:
-	output = roi.copy()
-	cv2.drawContours(output, [c], -1, (0, 255, 0), 3)
-	(x, y, w, h) = cv2.boundingRect(c)
-	text = "original, num_pts={}".format(len(c))
-	cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
-		0.4, (0, 255, 0), 2)
-
-	# show the original contour image
-	# print("[INFO] {}".format(text))
-	cv2.imshow("Original Contour", output)
-	cv2.waitKey(0)
-
-	# to demonstrate the impact of contour approximation, let's loop
-	# over a number of epsilon sizes
-	for eps in np.linspace(0.001, 0.05, 10):
-		# approximate the contour
-		peri = cv2.arcLength(c, True)
-		approx = cv2.approxPolyDP(c, eps * peri, True)
-		# draw the approximated contour on the image
-		output = image.copy()
-		cv2.drawContours(output, [approx], -1, (0, 255, 0), 3)
-		text = "eps={:.4f}, num_pts={}".format(eps, len(approx))
-		cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
-			0.4, (0, 255, 0), 2)
-		# show the approximated contour image
-		# print("[INFO] {}".format(text))
-		cv2.imshow("Approximated Contour", output)
-		cv2.waitKey(0)
-	cv2.destroyAllWindows()
 # %%
-	cv2.destroyAllWindows()
+# %%
 
 
+
+
+
+
+
+
+# %%
+#2b starts here segmentation to median
+# for i in range((len(abcde)))
+bu=[]
+bd=[]
+cu=[]
+cd=[]
+du=[]
+dd=[]
+
+for approxa in abcde:
+	# for popints in range(1,len(approxa)//2):
+	bu.append(approxa[1][0])
+	bd.append(approxa[-1][0])
+	cu.append(approxa[2][0])
+	cd.append(approxa[-2][0])
+	du.append(approxa[3][0])
+	dd.append(approxa[-3][0])
+	
+
+		
+############
+# %%
+orig=oorig.copy()
+# dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
+# dimA = dA / pixelsPerMetric
+
+cv2.line(orig, bu[0]+[x1,y1+10], bd[0]+[x1,y1-10], (0, 255, 0), 1)
+cv2.line(orig, bu[0]+[x1-10,y1+10], bd[0]+[x1-10,y1-10], (0, 0, 255), 1)
+cv2.line(orig, bu[0]+[x1+10,y1+10], bd[0]+[x1+10,y1-10], (255, 0, 0), 1)
+
+# cv2.circle(orig, bu[0]+[x1,y1], 3, (0, 255, 0), -1)
+# cv2.circle(orig, approxa[-popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+# if popints!=1:
+	# continue
+# cv2.putText(orig, "{:.2f}mm".format((bu[0])),
+# 			# (int(tl[0])-15, int(tl[1])-15), 
+# 			bu[0]+[x1,y1], 
+# 			cv2.FONT_HERSHEY_SIMPLEX,
+# 			0.35, (0, 255, 0), 1)
+plt.imshow(imutils.opencv2matplotlib(orig))
+
+
+# %%
+
+
+# %%
+# ### try writing modular code
+# def cutout(pu, pd, n=10, t=2):
+# 	""" function for getting strips of various portions to calculate median"""
+# 	coords=[]
+orig=oorig.copy()
+t=2
+n=10
+pu=du
+pd=dd
+for i in range(n):
+	# dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
+	# dimA = dA / pixelsPerMetric
+
+	cv2.line(orig, pu[0]+[x1,y1+15], pd[0]+[x1,y1-15], (0, 255, 0), 1)
+	cv2.line(orig, pu[0]+[x1-(n*t),y1+15], pd[0]+[x1-(n*t),y1-25], (0, 0, 255), 1)
+	cv2.line(orig, pu[0]+[x1+(n*t),y1+15], pd[0]+[x1+(n*t),y1-25], (255, 0, 0), 1)
+	# cv2.line(orig, pu[0]+[x1-(n-3*t),y1+15], pd[0]+[x1-(n-3*t),y1-15], (0, 0, 255), 1)
+	# cv2.line(orig, pu[0]+[x1+(n-3*t),y1+15], pd[0]+[x1+(n-3*t),y1-15], (255, 0, 0), 1)
+
+	# cv2.circle(orig, bu[0]+[x1,y1], 3, (0, 255, 0), -1)
+	# cv2.circle(orig, approxa[-popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+	# if popints!=1:
+		# continue
+	# cv2.putText(orig, "{:.2f}mm".format((bu[0])),
+	# 			# (int(tl[0])-15, int(tl[1])-15), 
+	# 			bu[0]+[x1,y1], 
+	# 			cv2.FONT_HERSHEY_SIMPLEX,
+	# 			0.35, (0, 255, 0), 1)
+plt.imshow(imutils.opencv2matplotlib(orig))
+# cv2.imshow("iamger",orig)
 # %%
 cv2.destroyAllWindows()
 
+# cutout(bu, bd)
 # %%
-# water shed algo
-# %%
-# load the image 
-image = cv2.imread("edited/frame157_edited.jpg")
-plt.imshow(image)
-
-# %%
-# and perform pyramid mean shift filtering
-# to aid the thresholding step
-shifted = cv2.pyrMeanShiftFiltering(image, 21, 51)
-plt.imshow(image)
-
-# %%
-# convert the mean shift image to grayscale, then apply
-# Otsu's thresholding
-gray = cv2.cvtColor(shifted, cv2.COLOR_BGR2GRAY)
-thresh = cv2.threshold(gray, 0, 255,
-	cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
-plt.imshow(imutils.opencv2matplotlib(thresh))
-
-# %%
-cv2.destroyAllWindows()
-
-# %%
-# compute the exact Euclidean distance from every binary
-# pixel to the nearest zero pixel, then find peaks in this
-# distance map
-D = ndimage.distance_transform_edt(thresh)
-localMax = peak_local_max(D, indices=False, min_distance=20,
-	labels=thresh)
-# perform a connected component analysis on the local peaks,
-# using 8-connectivity, then appy the Watershed algorithm
-markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
-labels = watershed(-D, markers, mask=thresh)
-print("[INFO] {} unique segments found".format(len(np.unique(labels)) - 1))
-
-# %%
-# loop over the unique labels returned by the Watershed
-# algorithm
-for label in np.unique(labels):
-	# if the label is zero, we are examining the 'background'
-	# so simply ignore it
-	if label == 0:
-		continue
-	# otherwise, allocate memory for the label region and draw
-	# it on the mask
-	mask = np.zeros(gray.shape, dtype="uint8")
-	mask[labels == label] = 255
-	# detect contours in the mask and grab the largest one
-	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-		cv2.CHAIN_APPROX_SIMPLE)
-	cnts = imutils.grab_contours(cnts)
-	c = max(cnts, key=cv2.contourArea)
-	# draw a circle enclosing the object
-	((x, y), r) = cv2.minEnclosingCircle(c)
-	cv2.circle(image, (int(x), int(y)), int(r), (0, 255, 0), 2)
-	cv2.putText(image, "#{}".format(label), (int(x) - 10, int(y)),
-		cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-# show the output image
-plt.imshow(imutils.opencv2matplotlib(image))
