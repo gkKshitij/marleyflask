@@ -1,16 +1,19 @@
+from flask import Flask
 from itertools import count
 import os
 from flask import Flask, request, redirect, url_for, render_template, send_from_directory,flash 
 from werkzeug.utils import secure_filename
-import cv2
-import numpy as np
+import re
 
+import numpy as np
+import cv2
 import matplotlib.pyplot as plt
 from scipy.spatial import distance as dist
 import imutils
 from imutils import perspective
 from imutils import contours
-import re
+import statistics
+
 
 # arrangements for heroku
 UPLOAD_FOLDER ='static/uploads/'
@@ -78,6 +81,7 @@ def detect_object(path, filename):    # TODO:
     blurred = cv2.GaussianBlur(gray, (11, 11), 0)
     cv2.imwrite(f"{DOWNLOAD_FOLDER}blurred_{filename}",blurred)
     edged = cv2.Canny(blurred, 50, 150)
+    eroi = edged.copy()
     cv2.imwrite(f"{DOWNLOAD_FOLDER}edged_{filename}",edged)
     dilated = cv2.dilate(edged, None, iterations=4) # 10 is an interesting number
     cv2.imwrite(f"{DOWNLOAD_FOLDER}dilated_{filename}",dilated)
@@ -89,6 +93,8 @@ def detect_object(path, filename):    # TODO:
     mask = thresh.copy()
     mask = cv2.erode(mask, None, iterations=1)
     cv2.imwrite(f"{DOWNLOAD_FOLDER}mask_{filename}",mask)
+    mask3 = mask.copy()
+
 
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
@@ -98,6 +104,8 @@ def detect_object(path, filename):    # TODO:
 
     orig = oorig.copy()
     tc = []
+    tca = []
+    abcde = []
 
     # loop over the contours individually
     nooftiles=0
@@ -116,9 +124,17 @@ def detect_object(path, filename):    # TODO:
         # print(roic)
 
         # if the contour is not sufficiently large, ignore it
-        print("Area of contour ", cv2.contourArea(c))
-        if cv2.contourArea(c) < 3000  or cv2.contourArea(c) > 5200:
+        if cv2.contourArea(c) < 4000  or cv2.contourArea(c) > 5200:
             continue
+        # print("Area of contour ", cv2.contourArea(c))
+
+        tca.append(c)
+        
+        eps=0.0228
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, eps * peri, True)
+        abcde.append(approx)
+
 
 
         # compute the rotated bounding box of the contour
@@ -154,13 +170,16 @@ def detect_object(path, filename):    # TODO:
         # between the top-left and top-right coordinates, followed by
         # the midpoint between bottom-left and bottom-right coordinates
         (tl, tr, br, bl) = box
-        # print(box)
-        print("tl", tl)
-        print("tr", tr)
-        print("br", br)
-        print("bl", bl)
+        
+        nooftiles+=1
 
-        print(nooftiles)
+        # print(box)
+        # print("tl", tl)
+        # print("tr", tr)
+        # print("br", br)
+        # print("bl", bl)
+
+        # print(nooftiles)
         nooftiles+=1
         
         cv2.putText(orig, f"{nooftiles}",
@@ -168,10 +187,15 @@ def detect_object(path, filename):    # TODO:
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.75, (0, 0, 255), 2)
 
-        cv2.imshow("Imager", orig)
-        print("Area of contour ", cv2.contourArea(c))
+        # cv2.imshow("Imager", orig)
+        # print("Area of contour ", cv2.contourArea(c))
+        # print(tc)
+        tc.append(box)
+        cv2.waitKey(0)
+        tcai = orig.copy()
 
-        if cv2.contourArea(c) < 5200:
+
+        if cv2.contourArea(c) < 5200: # temp jugad cause code is rendered differently on server
             tc.append(box)
             #continue
         # cv2.waitKey(0)
@@ -183,6 +207,7 @@ def detect_object(path, filename):    # TODO:
 
     for t in tc:
         # print(c)
+        # t=1
         image_tile = oorig
         roi_tile = image_tile[t[0][1]:t[2][1], t[0][0]:t[2][0]]
 
@@ -257,6 +282,10 @@ def detect_object(path, filename):    # TODO:
         (cnts, _) = contours.sort_contours(cnts)
 
         orig2 = oorig.copy()
+        orig = oorig.copy()
+        countertemp = 0
+
+
         for c in cnts:
             orig = oorig.copy()
             
@@ -296,6 +325,9 @@ def detect_object(path, filename):    # TODO:
             cv2.drawContours(orig, [roic.astype("int")], -1, (255, 255, 0), 2)
             cv2.drawContours(orig2, [roic.astype("int")], -1, (255, 255, 0), 2)
             # cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
+            
+            countertemp += 1
+
         
         
             # print(box.astype("int"))
@@ -384,11 +416,204 @@ def detect_object(path, filename):    # TODO:
             cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/c{counter}_{filename}",orig)
             cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/caio_{filename}",orig2)
             contournp = (f"{DOWNLOAD_FOLDER}processed/c{counter}_{filename}")
-            print(contournp)
+            # print(contournp)
             filelist.append(contournp)
-            print(counter)
+            # print(counter)
+
+        # mod abcde
+        orig = oorig.copy()
+
+        rabcde = abcde
+        for approxa in abcde:
+            for ppopints in range(1,len(approxa),2):
+                approxa[-ppopints][0][0]=approxa[ppopints][0][0]
+
+
+    # abcde
+        approxac=0
+        for approxa in abcde:
+            for popints in range(1,len(approxa)//2):
+                # print(approxa[popints], approxa[-popints])
+                # print(popints)
+                # print("len(approxa//2:",len(approxa)//2)
+                # dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
+                dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
+                dimA = dA / pixelsPerMetric
+
+                cv2.line(orig, approxa[popints][0]+[x1,y1], approxa[-popints][0]+[x1,y1], (0, 255, 0), 1)
+                cv2.circle(orig, approxa[popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+                cv2.circle(orig, approxa[-popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+                # if popints!=1:
+                    # continue
+                cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10+4),
+                            # (int(tl[0])-15, int(tl[1])-15), 
+                            approxa[popints][0]+[x1,y1], 
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.35, (0, 255, 0), 1)
+            approxac+=1
+        greendots = orig.copy()
+        cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/greendotsi_{filename}",orig)
+
+
 
         # cv2.destroyAllWindows()
+    
+    # def it here
+    #2b starts here segmentation to median
+    # for i in range((len(abcde)))
+    bu=[]
+    bd=[]
+    cu=[]
+    cd=[]
+    du=[]
+    dd=[]
+
+    for approxa in abcde:
+        # for popints in range(1,len(approxa)//2):
+        bu.append(approxa[1][0])
+        bd.append(approxa[-1][0])
+        cu.append(approxa[2][0])
+        cd.append(approxa[-2][0])
+        du.append(approxa[3][0])
+        dd.append(approxa[-3][0])
+
+    orig=oorig.copy()
+
+    orig=oorig.copy()
+    thickness=2
+    n=10
+    # pu=du
+    # pd=dd
+    pu=[bu, cu, du]
+    pd=[bu, cd, dd]
+    # x1=x1,y1=y1,x2=x2,y2=y2, n=10,thickness, oorig=oorig
+
+###############################
+    # def bcd_lr(u, d,thickness,x1=x1,y1=y1,x2=x2,y2=y2, n=10, oorig=oorig):
+    #     # # %%
+    #     t=thickness
+    #     pu = du
+    #     pd = dd
+
+    #     coordsl = []
+    #     coordsr = []
+
+    #     dimSr = []
+    #     dimSl = []
+
+    #     # # %%
+    #     for i in range(n):
+    #         # dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
+    #         # dimA = dA / pixelsPerMetric
+    #         # coordsl.append([pu[0]+[-(i*t),15], pd[0]+[-(i*t),-25]]) # l				
+    #         # coordsr.append([pu[0]+[(i*t),15], pd[0]+[(i*t),-25]]) # r
+    #         coordsl.append([pu[0]+[x1-(i*t),y1+15], pd[0]+[x1-(i*t),y1-25]]) # l				
+    #         coordsr.append([pu[0]+[x1+(i*t),y1+15], pd[0]+[x1+(i*t),y1-25]]) # r
+
+    #     # #  %%
+
+    #     # cv2.line(maskt, coordsr[0][0], coordsr[0][1], (0, 0, 255), 1)
+    #     # cv2.line(maskt, coordsr[0][0]+[1,0], coordsr[0][1]+[1,0], (0, 0, 255), 1)
+    #     # plt.imshow(imutils.opencv2matplotlib(origs))
+
+
+    #     # # %%
+    #     for j in range(n-1):
+    #         # print("j=",j)
+    #         origs = oorig.copy()
+    #         y1s=coordsr[0][1][1]
+    #         y2s=coordsr[0][0][1]
+    #         x1s=coordsr[j][0][0]
+    #         x2s=coordsr[j+1][0][0]
+    #         # # %%
+    #         slice = origs[y1s:y2s, x1s:x2s]
+    #         # print(slice)
+
+    #         gray = cv2.cvtColor(slice, cv2.COLOR_BGR2GRAY)
+    #         blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+    #         edged = cv2.Canny(blurred, 50, 100) # blurred
+
+    #         contours, hierarchy= cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    #         # print(contours)
+    #         if len(contours)!=2:
+    #             continue
+    #         x=contours[0][0][0][0]
+    #         y1c=contours[0][1][0][1]
+    #         y2c=contours[1][1][0][1]
+    #         dS = dist.euclidean((x, y1c), (x, y2c))
+    #         # print(dS)
+
+    #         dimS = dS / pixelsPerMetric
+    #         # print(((dimS*2.54)*10))
+    #         # print("{:.2f}mm".format((dimS*2.54)*10))
+    #         dimSr.append(dimS)
+    #     # # %%
+    #     for k in range(n-1):
+    #         # print("k=",k)
+
+    #         ##### left
+    #         origs = oorig.copy()
+    #         y1s=coordsl[0][1][1]
+    #         y2s=coordsl[0][0][1]
+    #         x1s=coordsl[k+1][0][0]
+    #         x2s=coordsl[k][0][0]
+    #         # # %%
+    #         slicek = origs[y1s:y2s, x1s:x2s]
+
+    #         # print(slicek)
+    #         gray = cv2.cvtColor(slicek, cv2.COLOR_BGR2GRAY)
+    #         blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+    #         edged = cv2.Canny(blurred, 50, 100) # blurred
+
+    #         contours, hierarchy= cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    #         # print(contours)
+    #         if len(contours)!=2:
+    #             continue
+    #         x=contours[0][0][0][0]
+    #         y1c=contours[0][1][0][1]
+    #         y2c=contours[1][1][0][1]
+    #         dS = dist.euclidean((x, y1c), (x, y2c))
+    #         # print(dS)
+
+    #         dimS = dS / pixelsPerMetric
+    #         # print(((dimS*2.54)*10))
+    #         # print("{:.2f}mm".format((dimS*2.54)*10))
+    #         dimSl.append(dimS)
+    #     kedian = statistics.median(dimSl+dimSr)
+    #     return kedian
+
+    # kmls = []
+    # for l in range(len(pu)):
+    #     temp = bcd_lr(pu[l], pd[l])
+    #     # print(pu[l], pd[l])
+    #     kmls.append(temp)
+###############################
+
+    # for t in tc:
+    #     approxac=0
+    #     for approxa in abcde:
+    #         for popints in range(1,len(approxa)//2):
+    #             # print(approxa[popints], approxa[-popints])
+    #             # print(popints)
+    #             # print("len(approxa//2:",len(approxa)//2)
+    #             # dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
+    #             dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
+    #             dimA = dA / pixelsPerMetric
+
+    #             cv2.line(orig, approxa[popints][0]+[x1,y1], approxa[-popints][0]+[x1,y1], (0, 255, 0), 1)
+    #             cv2.circle(orig, approxa[popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+    #             cv2.circle(orig, approxa[-popints][0]+[x1,y1], 3, (0, 255, 0), -1)
+    #             # if popints!=1:
+    #                 # continue
+    #             cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10+4),
+    #                         # (int(tl[0])-15, int(tl[1])-15), 
+    #                         approxa[popints][0]+[x1,y1], 
+    #                         cv2.FONT_HERSHEY_SIMPLEX,
+    #                         0.35, (0, 255, 0), 1)
+    #         approxac+=1
+    #     green=orig.copy()
+    
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -433,7 +658,9 @@ def index():
                 # "processed_img_c{i}":'static/downloads/processed_'+'c{i}_'+filename,
                 "{i}":'static/downloads/processed_'+'c{i}_'+filename,
                 # "counter":10 # doesnt work
+                "greendotsi":'static/downloads/processed/greendotsi_'+filename,
                 }
+
             return render_template("index.html",data=data, imagelist=imagelist)  
     return render_template('index.html')
 
@@ -445,4 +672,4 @@ def index():
 #     return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=5002)
