@@ -26,27 +26,68 @@
       <a class="navbar-brand navbar-center" href="#">OpenCV & Python</a>
    </nav>
 
-   <div class="container">
+   <!-- <div class="container">
       <div class="starter-template">
          <h2>Test Marley Tiles</h2>
          <p>Upload an image</p>
          <p> Max Image Size: 7 MB </p>
       </div>
-   </div>
-
+   </div> -->
 
 
 
    <div class="container">
-      <form method=post enctype=multipart/form-data>
-         <input type=file name=file onchange="loadFile(event)">
-         <input type=submit value=Upload class="btn btn-primary">
-      </form>
-      <img id="output" alt="" width="40%" height="40%" />
+
+      <div class="row">
+         <div class="column" style="background-color:rgb(255, 255, 255);">
+            <div class="kontainer">
+               <div class="starter-template">
+                  <h2>Test Marley Tiles</h2>
+                  <p>Upload an image</p>
+                  <p> Max Image Size: 7 MB </p>
+               </div>
+            </div>
+
+            <div class="kontainer">
+               <form method=post enctype=multipart/form-data>
+                  <input type=file name=file onchange="loadFile(event)">
+                  <input type=submit value=Upload class="btn btn-primary">
+               </form>
+               <img id="output" alt="" width="100%" height="100%" />
+            </div>
+
+            {% if data %}
+            <h4>Uploaded Image</h4>
+            <div style="background-color:rgb(255, 255, 255);">
+               <img src="{{ data.uploaded_img }}" alt="input" width="60%" height="60%">
+            </div>
+            {% endif %}
+         </div>
+
+         {% if data %}
+         <div class="column" style="background-color:rgb(255, 255, 255);">
+            <div class="container">
+            
+            <h2>Standard Dimensions</h2>
+            <!-- <img id="output" alt="" width="40%" height="40%" /> -->
+            <img src = "static/tiledim.png" alt="static/tiledim.png" height="450px">
+            
+         </div>
+         </div>
+         {% endif %}
+      </div>
+
    </div>
 
+
+
+
+   
+
+   <!-- processed -->
    {% if data %}
-   <div class="container">
+
+   <!-- <div class="container">
       <img src="{{ data.uploaded_img }}" alt="input" height="500px">
       <br>
       <br>
@@ -72,8 +113,75 @@
       <br>
       <br>
       <img src="{{ data.processed_img }}" alt="output" height="500px">
+   </div> -->
+
+
+   <!-- <div class="container">
+
+      <div class="row">
+         <div class="column" style="background-color:#aaa;">
+            <div class="container">
+               <h2>Detected Tiles</h2>
+               <img src="{{ data.tilesdetected }}" alt="tilesdetected" width="100%" height="100%">
+               <br>
+               <br>
+            </div>
+            
+         </div>
+         <div class="column" style="background-color:#bbb;">
+            <div class="container">
+               <h2>Column 2</h2>
+               <p>Some text..</p>
+            </div>
+         </div>
+      </div>
+
+   </div> -->
+
+
+
+<!--    
+   <div class="container">
+      <h2>Detected Tiles</h2>
+      <img src="{{ data.tilesdetected }}" alt="tilesdetected" width="100%" height="100%">
+      <br>
+      <br>
    </div>
+
+   <br>
+   <br>
+
+   <div class="container">
+      <h2>Points / contours height</h2>
+   {% for image in imagelist %}
+   <img src = "static/downloads/processed/{{image}}" alt="{{image}}" width="100%" height="100%">
+   <br>
+   <br>
+   {% endfor %}
+
+   </div>
+
+   <div class="container">
+      <h2>All detected points</h2>
+   <img src = "{{data.caio}}" alt="{{data.caio}}" width="100%" height="100%">
+   <br>
+   <br>
+
+   </div> -->
+
+   <div class="container">
+      <h2>Approx calculated measurements of Tiles</h2>
+      <img src="{{ data.greendotsi }}" alt="greendotsi" width="100%" height="100%">
+      <br>
+      <br>
+   </div>
+
+   <br>
+   <br>
+
+
    {% endif %}
+
 
 
    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
