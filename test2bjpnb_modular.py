@@ -9,6 +9,7 @@ from scipy.spatial import distance as dist
 import imutils
 from imutils import perspective
 from imutils import contours
+import statistics
 
 # %%
 # # construct the argument parser and parse the arguments
@@ -757,7 +758,7 @@ def bcd_lr(u, d,x1=x1,y1=y1,x2=x2,y2=y2, n=10,t=2, oorig=oorig):
 
 	# # %%
 	for j in range(n-1):
-		print("j=",j)
+		# print("j=",j)
 		origs = oorig.copy()
 		y1s=coordsr[0][1][1]
 		y2s=coordsr[0][0][1]
@@ -787,7 +788,7 @@ def bcd_lr(u, d,x1=x1,y1=y1,x2=x2,y2=y2, n=10,t=2, oorig=oorig):
 		dimSr.append(dimS)
 	# # %%
 	for k in range(n-1):
-		print("k=",k)
+		# print("k=",k)
 
 		##### left
 		origs = oorig.copy()
@@ -817,14 +818,18 @@ def bcd_lr(u, d,x1=x1,y1=y1,x2=x2,y2=y2, n=10,t=2, oorig=oorig):
 		# print(((dimS*2.54)*10))
 		# print("{:.2f}mm".format((dimS*2.54)*10))
 		dimSl.append(dimS)
-	return(dimSr, dimSl)
+	kedian = statistics.median(dimSl+dimSr)
+	return kedian
 
 
 
 # %%
-r,l=bcd_lr(du, dd)
+d=bcd_lr(du, dd)
 
 
 
+
+# %%
+# statistics.median(l+r)
 
 # %%
