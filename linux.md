@@ -18,6 +18,8 @@ done
 conda create --name pyis -c anaconda python=3.6 anaconda=5.2.0
 
 
+conda env remove -n ENV_NAME
+
 apt-get update && apt-get install libgl1
 conda install -c conda-forge opencv
 conda install -c conda-forge statistics
@@ -25,4 +27,5 @@ conda install -c conda-forge flask
 conda install -c conda-forge imutils
 conda install -c conda-forge scipy
 conda install -c conda-forge matplotlib-base
+conda install -c anaconda waitress
 
