@@ -1,4 +1,4 @@
-from flask import Flask
+# from flask import Flask
 from itertools import count
 import os
 from flask import Flask, request, redirect, url_for, render_template, send_from_directory,flash 
@@ -672,4 +672,9 @@ def index():
 #     return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(port=5002)
+    print(__name__)
+    # app.run(port=5002)
+
+# from flask import Flask
+# app = Flask(__name__)
+# # app.run(host='0.0.0.0', port=8080,debug=True)

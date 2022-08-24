@@ -1,7 +1,7 @@
-echo 1
-conda activate pyis
-echo 2
+echo Activating environment
+call activate pyis
+echo Traversing to the directory
 cd /D D:\work\marley\marleyflask
-echo 3
+echo Starting the server
 python app.py
-echo 4
+echo Done
