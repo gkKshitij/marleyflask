@@ -184,7 +184,7 @@ orig = oorig.copy()
 tc = []
 tca = []
 abcde = []
-pixelsPerMetric = 60
+pixelsPerMetric = 110
 
 for c in cnts:
     # print("contour area=",cv2.contourArea(c))
