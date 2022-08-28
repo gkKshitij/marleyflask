@@ -14,7 +14,7 @@ from imutils import perspective
 from imutils import contours
 import statistics
 
-from skimage.exposure import is_low_contrast
+# from skimage.exposure import is_low_contrast
 
 # arrangements for heroku
 UPLOAD_FOLDER ='static/uploads/'
