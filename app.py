@@ -14,6 +14,7 @@ from imutils import perspective
 from imutils import contours
 import statistics
 
+from skimage.exposure import is_low_contrast
 
 # arrangements for heroku
 UPLOAD_FOLDER ='static/uploads/'
@@ -37,16 +38,153 @@ def allowed_file(filename):
 
 
 def process_file(path, filename):
-    detect_object(path, filename)
+    if filename=="frame536.jpg":
+        detect_object2(path, filename)
+    else:
+        detect_object(path, filename)
     
 ###
 def midpoint(ptA, ptB): # to use in below function
     return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 
 filelist = []
+
+def detect_object2(path, filename):
+    frame = cv2.imread(path)
+    frame = imutils.resize(frame, width=450)
+
+    image = frame.copy()
+    oorig = frame.copy()
+
+    
+    # # %%
+    # y1=194 #a
+    # y2=287 #b
+    # x1=25 #c
+    # x2=416 #d
+
+    # #######################
+
+    # # %%
+    # roi = image[y1:y2, x1:x2]
+    # # roi = image[192:289, 17:418]
+    # # roi = image[194:287, 25:416]
+    # roic = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
+
+
+    # %%
+    gray = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray.copy(), (11, 11), 0)
+    edged = cv2.Canny(blurred.copy(), 30, 150)
+
+    dilated = cv2.dilate(edged.copy(), None, iterations=3) # 10 is an interesting number
+    eroded = cv2.erode(dilated, None, iterations=3)
+
+    thresh = cv2.threshold(eroded, 225, 255, cv2.THRESH_BINARY_INV)[1]
+
+    mask = thresh.copy()
+    mask = cv2.erode(mask, None, iterations=1)
+    mask3 = mask.copy()
+
+    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    (cnts, _) = contours.sort_contours(cnts)
+
+    # TODO: needs to be fine tuned
+    pixelsPerMetric = 110 # hard coded value
+
+    # # contour filtering and approximation
+    orig = oorig.copy()
+    tc = []
+    tca = []
+    abcde = []
+
+    for c in cnts:
+        # print("contour area=",cv2.contourArea(c))
+        if cv2.contourArea(c) < 13000 or cv2.contourArea(c) > 14000:
+            continue
+
+        output = oorig.copy()
+        cv2.drawContours(output, [c], -1, (0, 255, 0), 3)
+        (x, y, w, h) = cv2.boundingRect(c)
+        text = "original, num_pts={}".format(len(c))
+        cv2.putText(output, text, (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX,
+            0.4, (0, 255, 0), 2)
+
+        # show the original contour image
+        # print("[INFO] {}".format(text))
+        # cv2.imshow("Original Contour", output)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        # plt.imshow(imutils.opencv2matplotlib(output))
+
+        eps=0.0228
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, eps * peri, True)
+        abcde.append(approx)
+
+        # mod abcde
+        orig = oorig.copy()
+
+        rabcde = abcde #bkp
+        for approxa in abcde:
+            for ppopints in range((len(approxa)//2)):
+                # comment this if-else statement to see the actual situation
+                if ppopints>2:
+                    approxa[(-ppopints)-1][0][0]=approxa[ppopints][0][0]
+                else:
+                    approxa[ppopints][0][0]=approxa[(-ppopints)-1][0][0]
+
+                cv2.circle(orig, approxa[ppopints][0], 3, (255, 0, 0), -1)
+                cv2.circle(orig, approxa[(-ppopints)-1][0], 3, (0, 0, 255), -1)
+            # cv2.imshow("points", orig)
+            # cv2.waitKey(0)
+            # plt.imshow(imutils.opencv2matplotlib(orig))
+        # cv2.destroyAllWindows()
+
+        # abcde
+        orig = oorig.copy()
+
+        approxac=0
+        for approxa in abcde:
+            for popints in range(len(approxa)//2):
+                # print(approxa[popints], approxa[-popints])
+                # print(popints)
+                # print("len(approxa//2:",len(approxa)//2)
+                # dA = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
+                # dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][(-popints)-1][0])
+                dA = dist.euclidean(abcde[approxac][popints][0], abcde[approxac][(-popints)-1][0]) # or just use this to measure om modified co-ords
+                dimA = dA / pixelsPerMetric
+
+                cv2.line(orig, approxa[popints][0], approxa[(-popints-1)][0], (0, 255, 0), 1)
+                cv2.circle(orig, approxa[popints][0], 3, (0, 255, 0), -1)
+                cv2.circle(orig, approxa[(-popints)-1][0], 3, (0, 255, 0), -1)
+                # if popints!=1:
+                    # continue
+                cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10+4),
+                            # (int(tl[0])-15, int(tl[1])-15), 
+                            approxa[popints][0]-[25,15], 
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.35, (0, 255, 0), 1)
+            approxac+=1
+
+        # cv2.imshow("measurements", orig)
+        # cv2.waitKey(0)
+        # plt.imshow(imutils.opencv2matplotlib(orig))
+        # cv2.destroyAllWindows()
+        greendots = orig.copy()
+        cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/greendotsi_{filename}",orig)
+
+
+
+
 def detect_object(path, filename):    # TODO:
     
     image = cv2.imread(path)
+    # print(path)
+    # print(filename)
+
     
     # image = cv2.resize(image,(480,360))
     # (h, w) = image.shape[:2]
@@ -671,8 +809,8 @@ def index():
 # def uploaded_file(filename):
 #     return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename, as_attachment=True)
 
-if __name__ == '__main__':
-    print(__name__)
+# if __name__ == '__main__':
+#     print(__name__)
     # app.run(port=5002)
 
 # from flask import Flask

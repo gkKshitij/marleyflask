@@ -730,104 +730,104 @@ pd=[bu, cd, dd]
 
 
 # def bcd_lr(u, d, ll,x1=x1,y1=y1,x2=x2,y2=y2, n=10,thickness=2, oorig=oorig):
-	# # %%
-	# kedian=[[]]
-	t=thickness
-	pu = u
-	pd = d
-	ll=ll
+# 	# # %%
+# 	# kedian=[[]]
+# 	t=thickness
+# 	pu = u
+# 	pd = d
+# 	ll=ll
 
-	# for ll in range(len(u)):
+# 	# for ll in range(len(u)):
 
-	coordsl = []
-	coordsr = []
+# 	coordsl = []
+# 	coordsr = []
 
-	dimSr = []
-	dimSl = []
+# 	dimSr = []
+# 	dimSl = []
 
-	# # %%
-	for i in range(n):
-		# dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
-		# dimA = dA / pixelsPerMetric
-		# coordsl.append([pu[0]+[-(i*t),15], pd[0]+[-(i*t),-25]]) # l				
-		# coordsr.append([pu[0]+[(i*t),15], pd[0]+[(i*t),-25]]) # r
-		coordsl.append([pu[ll]+[x1-(i*t),y1+15], pd[ll]+[x1-(i*t),y1-25]]) # l				
-		coordsr.append([pu[ll]+[x1+(i*t),y1+15], pd[ll]+[x1+(i*t),y1-25]]) # r
+# 	# # %%
+# 	for i in range(n):
+# 		# dA = dist.euclidean(rabcde[approxac][popints][0], rabcde[approxac][-popints][0])
+# 		# dimA = dA / pixelsPerMetric
+# 		# coordsl.append([pu[0]+[-(i*t),15], pd[0]+[-(i*t),-25]]) # l				
+# 		# coordsr.append([pu[0]+[(i*t),15], pd[0]+[(i*t),-25]]) # r
+# 		coordsl.append([pu[ll]+[x1-(i*t),y1+15], pd[ll]+[x1-(i*t),y1-25]]) # l				
+# 		coordsr.append([pu[ll]+[x1+(i*t),y1+15], pd[ll]+[x1+(i*t),y1-25]]) # r
 
-	# #  %%
+# 	# #  %%
 
-	# cv2.line(maskt, coordsr[0][0], coordsr[0][1], (0, 0, 255), 1)
-	# cv2.line(maskt, coordsr[0][0]+[1,0], coordsr[0][1]+[1,0], (0, 0, 255), 1)
-	# plt.imshow(imutils.opencv2matplotlib(origs))
+# 	# cv2.line(maskt, coordsr[0][0], coordsr[0][1], (0, 0, 255), 1)
+# 	# cv2.line(maskt, coordsr[0][0]+[1,0], coordsr[0][1]+[1,0], (0, 0, 255), 1)
+# 	# plt.imshow(imutils.opencv2matplotlib(origs))
 
 
-	# # %%
-	for j in range(n-1):
-		# print("j=",j)
-		origs = oorig.copy()
-		y1s=coordsr[0][1][1]
-		y2s=coordsr[0][0][1]
-		x1s=coordsr[j][0][0]
-		x2s=coordsr[j+1][0][0]
-		# # %%
-		slice = origs[y1s:y2s, x1s:x2s]
-		# print(slice)
+# 	# # %%
+# 	for j in range(n-1):
+# 		# print("j=",j)
+# 		origs = oorig.copy()
+# 		y1s=coordsr[0][1][1]
+# 		y2s=coordsr[0][0][1]
+# 		x1s=coordsr[j][0][0]
+# 		x2s=coordsr[j+1][0][0]
+# 		# # %%
+# 		slice = origs[y1s:y2s, x1s:x2s]
+# 		# print(slice)
 
-		gray = cv2.cvtColor(slice, cv2.COLOR_BGR2GRAY)
-		blurred = cv2.GaussianBlur(gray, (11, 11), 0)
-		edged = cv2.Canny(blurred, 50, 100) # blurred
+# 		gray = cv2.cvtColor(slice, cv2.COLOR_BGR2GRAY)
+# 		blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+# 		edged = cv2.Canny(blurred, 50, 100) # blurred
 
-		contours, hierarchy= cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-		# print(contours)
-		if len(contours)!=2:
-			continue
-		x=contours[0][0][0][0]
-		y1c=contours[0][1][0][1]
-		y2c=contours[1][1][0][1]
-		dS = dist.euclidean((x, y1c), (x, y2c))
-		# print(dS)
+# 		contours, hierarchy= cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+# 		# print(contours)
+# 		if len(contours)!=2:
+# 			continue
+# 		x=contours[0][0][0][0]
+# 		y1c=contours[0][1][0][1]
+# 		y2c=contours[1][1][0][1]
+# 		dS = dist.euclidean((x, y1c), (x, y2c))
+# 		# print(dS)
 
-		dimS = dS / pixelsPerMetric
-		# print(((dimS*2.54)*10))
-		# print("{:.2f}mm".format((dimS*2.54)*10))
-		dimSr.append(dimS)
-	# # %%
-	for k in range(n-1):
-		# print("k=",k)
+# 		dimS = dS / pixelsPerMetric
+# 		# print(((dimS*2.54)*10))
+# 		# print("{:.2f}mm".format((dimS*2.54)*10))
+# 		dimSr.append(dimS)
+# 	# # %%
+# 	for k in range(n-1):
+# 		# print("k=",k)
 
-		##### left
-		origs = oorig.copy()
-		y1s=coordsl[0][1][1]
-		y2s=coordsl[0][0][1]
-		x1s=coordsl[k+1][0][0]
-		x2s=coordsl[k][0][0]
-		# # %%
-		slicek = origs[y1s:y2s, x1s:x2s]
+# 		##### left
+# 		origs = oorig.copy()
+# 		y1s=coordsl[0][1][1]
+# 		y2s=coordsl[0][0][1]
+# 		x1s=coordsl[k+1][0][0]
+# 		x2s=coordsl[k][0][0]
+# 		# # %%
+# 		slicek = origs[y1s:y2s, x1s:x2s]
 
-		# print(slicek)
-		gray = cv2.cvtColor(slicek, cv2.COLOR_BGR2GRAY)
-		blurred = cv2.GaussianBlur(gray, (11, 11), 0)
-		edged = cv2.Canny(blurred, 50, 100) # blurred
+# 		# print(slicek)
+# 		gray = cv2.cvtColor(slicek, cv2.COLOR_BGR2GRAY)
+# 		blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+# 		edged = cv2.Canny(blurred, 50, 100) # blurred
 
-		contours, hierarchy= cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-		# print(contours)
-		if len(contours)!=2:
-			continue
-		x=contours[0][0][0][0]
-		y1c=contours[0][1][0][1]
-		y2c=contours[1][1][0][1]
-		dS = dist.euclidean((x, y1c), (x, y2c))
-		# print(dS)
+# 		contours, hierarchy= cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+# 		# print(contours)
+# 		if len(contours)!=2:
+# 			continue
+# 		x=contours[0][0][0][0]
+# 		y1c=contours[0][1][0][1]
+# 		y2c=contours[1][1][0][1]
+# 		dS = dist.euclidean((x, y1c), (x, y2c))
+# 		# print(dS)
 
-		dimS = dS / pixelsPerMetric
-		# print(((dimS*2.54)*10))
-		# print("{:.2f}mm".format((dimS*2.54)*10))
-		dimSl.append(dimS)
+# 		dimS = dS / pixelsPerMetric
+# 		# print(((dimS*2.54)*10))
+# 		# print("{:.2f}mm".format((dimS*2.54)*10))
+# 		dimSl.append(dimS)
 
-	tkedian = statistics.median(dimSl+dimSr)
-	# kedian[ll].append(tkedian)
-	kedian = tkedian
-	return kedian
+# 	tkedian = statistics.median(dimSl+dimSr)
+# 	# kedian[ll].append(tkedian)
+# 	kedian = tkedian
+# 	return kedian
 
 
 
