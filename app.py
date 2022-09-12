@@ -38,10 +38,11 @@ def allowed_file(filename):
 
 
 def process_file(path, filename):
-    if filename=="frame536.jpg":
-        detect_object2(path, filename)
-    else:
+    if filename!="frame536.jpg":
         detect_object(path, filename)
+    else:
+        cabcde=detect_object2(path, filename)
+        return cabcde
     
 ###
 def midpoint(ptA, ptB): # to use in below function
@@ -99,6 +100,15 @@ def detect_object2(path, filename):
     tc = []
     tca = []
     abcde = []
+    cabcde = [] # calculated abcde
+
+    aroe = [ # allowed range of error
+    [10.5,11],
+    [12.0,13.0],
+    [11.0,12.0],
+    [12.0,13.0],
+    [11.0,12.0],
+    ]
 
     for c in cnts:
         # print("contour area=",cv2.contourArea(c))
@@ -122,7 +132,9 @@ def detect_object2(path, filename):
         eps=0.0228
         peri = cv2.arcLength(c, True)
         approx = cv2.approxPolyDP(c, eps * peri, True)
+        print(len(approx))
         abcde.append(approx)
+
 
         # mod abcde
         orig = oorig.copy()
@@ -146,6 +158,8 @@ def detect_object2(path, filename):
         # abcde
         orig = oorig.copy()
 
+        pnt=0 # point
+
         approxac=0
         for approxa in abcde:
             for popints in range(len(approxa)//2):
@@ -162,11 +176,27 @@ def detect_object2(path, filename):
                 cv2.circle(orig, approxa[(-popints)-1][0], 3, (0, 255, 0), -1)
                 # if popints!=1:
                     # continue
-                cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10+4),
+     
+                red = (0,0,255)
+                green = (0,255,0)
+
+                dim = ((dimA*2.54)*10+4)
+                
+
+                # print(aroe[4-pnt][0], dim, aroe[4-pnt][1])
+                # print(dim>aroe[4-pnt][0], dim, dim<aroe[4-pnt][1])
+                # print("\n")
+                tc = red
+                if (dim>aroe[4-pnt][0]) and (dim<aroe[4-pnt][1]):
+                    tc = green
+
+                cv2.putText(orig, "{:.2f}mm".format(dim),
                             # (int(tl[0])-15, int(tl[1])-15), 
                             approxa[popints][0]-[25,15], 
                             cv2.FONT_HERSHEY_SIMPLEX,
-                            0.35, (0, 255, 0), 1)
+                            0.35, tc, 1)
+                pnt+=1
+                cabcde.append(dim)      
             approxac+=1
 
         # cv2.imshow("measurements", orig)
@@ -175,6 +205,7 @@ def detect_object2(path, filename):
         # cv2.destroyAllWindows()
         greendots = orig.copy()
         cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/greendotsi_{filename}",orig)
+    return(cabcde)
 
 
 
@@ -583,11 +614,14 @@ def detect_object(path, filename):    # TODO:
                 cv2.circle(orig, approxa[-popints][0]+[x1,y1], 3, (0, 255, 0), -1)
                 # if popints!=1:
                     # continue
+
                 cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10+4),
                             # (int(tl[0])-15, int(tl[1])-15), 
                             approxa[popints][0]+[x1,y1], 
                             cv2.FONT_HERSHEY_SIMPLEX,
-                            0.35, (0, 255, 0), 1)
+                            0.35, (0, (0,255,0), 0), 1)
+                # pnt+=1
+                
             approxac+=1
         greendots = orig.copy()
         cv2.imwrite(f"{DOWNLOAD_FOLDER}processed/greendotsi_{filename}",orig)
@@ -766,7 +800,7 @@ def index():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(UPLOAD_FOLDER, filename))
-            process_file(os.path.join(UPLOAD_FOLDER, filename), filename)
+            cabcde = process_file(os.path.join(UPLOAD_FOLDER, filename), filename)
 
             # filelist = filelist
             imageList = os.listdir('static/downloads/processed')
@@ -797,6 +831,7 @@ def index():
                 "{i}":'static/downloads/processed_'+'c{i}_'+filename,
                 # "counter":10 # doesnt work
                 "greendotsi":'static/downloads/processed/greendotsi_'+filename,
+                "cabcde":cabcde
                 }
 
             return render_template("index.html",data=data, imagelist=imagelist)  

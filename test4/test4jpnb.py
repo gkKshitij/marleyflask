@@ -67,6 +67,9 @@ x2=416 #d
 # # roi = image[192:289, 17:418]
 # # roi = image[194:287, 25:416]
 # roic = [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
+# image=roi.copy()
+# plt.imshow(imutils.opencv2matplotlib(image))
+
 
 
 # %%
@@ -186,6 +189,14 @@ tca = []
 abcde = []
 pixelsPerMetric = 110
 
+aroe = [ # allowed range of error
+    [10.5,11],
+    [12.0,13.0],
+    [11.0,12.0],
+    [12.0,13.0],
+    [11.0,12.0],
+    ]
+
 for c in cnts:
     # print("contour area=",cv2.contourArea(c))
     if cv2.contourArea(c) < 13000 or cv2.contourArea(c) > 14000:
@@ -258,6 +269,7 @@ for c in cnts:
 
     # abcde
     orig = oorig.copy()
+    pnt=0 # point
 
     approxac=0
     for approxa in abcde:
@@ -275,11 +287,27 @@ for c in cnts:
             cv2.circle(orig, approxa[(-popints)-1][0], 3, (0, 255, 0), -1)
             # if popints!=1:
                 # continue
-            cv2.putText(orig, "{:.2f}mm".format((dimA*2.54)*10+4),
+
+            red = (0,0,255)
+            green = (0,255,0)
+
+            dim = ((dimA*2.54)*10+4)
+            
+            tc = red
+
+            print(aroe[4-pnt][0], dim, aroe[4-pnt][1])
+            print(dim>aroe[4-pnt][0], dim, dim<aroe[4-pnt][1])
+            print("/n")
+            if (dim>aroe[4-pnt][0]) and (dim<aroe[4-pnt][1]):
+                tc = green
+
+            cv2.putText(orig, "{:.2f}mm".format(dim),
                         # (int(tl[0])-15, int(tl[1])-15), 
                         approxa[popints][0]-[25,15], 
                         cv2.FONT_HERSHEY_SIMPLEX,
-                        0.35, (0, 255, 0), 1)
+                        0.35, tc, 1)
+            pnt+=1
+            # print(temp)
         approxac+=1
 
     # cv2.imshow("measurements", orig)
