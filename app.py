@@ -132,8 +132,11 @@ def detect_object2(path, filename):
         eps=0.0228
         peri = cv2.arcLength(c, True)
         approx = cv2.approxPolyDP(c, eps * peri, True)
-        print(len(approx))
-        abcde.append(approx)
+        # print(len(approx))
+        if len(approx)==10:
+            abcde.append(approx)
+        else:
+            continue
 
 
         # mod abcde
